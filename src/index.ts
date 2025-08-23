@@ -85,6 +85,64 @@ app.use(limiter);
 app.use(cors());
 app.use(express.json());
 
+// Root endpoint with API documentation
+app.get('/', (_req: Request, res: Response) => {
+	const apiInfo = {
+		name: 'Food API',
+		version: process.env.npm_package_version || '0.1.0',
+		description: 'A RESTful API to fetch food information from the USDA FoodData Central database',
+		baseUrl: process.env.NODE_ENV === 'production' ? 'https://your-domain.com' : `http://localhost:${port}`,
+		endpoints: {
+			root: {
+				path: '/',
+				method: 'GET',
+				description: 'API documentation and welcome message'
+			},
+			health: {
+				path: '/health',
+				method: 'GET',
+				description: 'Health check endpoint to verify API status and service connectivity'
+			},
+			foods: {
+				path: '/foods',
+				method: 'GET',
+				description: 'Search for food items in the USDA database',
+				queryParameters: {
+					type: {
+						required: true,
+						type: 'string',
+						description: 'Food type to search for (e.g., "apple", "chicken breast")',
+						example: 'apple'
+					},
+					limit: {
+						required: false,
+						type: 'number',
+						description: 'Maximum number of results to return (1-50, default: 10)',
+						example: 10
+					}
+				},
+				example: '/foods?type=apple&limit=5'
+			}
+		},
+		rateLimiting: {
+			windowMs: '15 minutes',
+			maxRequests: 100,
+			description: 'Rate limited to 100 requests per IP address per 15-minute window'
+		},
+		usdaDisclaimer: {
+			important: 'USDA Data Disclaimer',
+			message: 'This API provides access to data from the USDA FoodData Central database. The USDA requires the following disclaimer for all uses of their data:',
+			disclaimer: 'The U.S. Department of Agriculture (USDA) prohibits discrimination against its customers, employees, and applicants for employment on the basis of race, color, national origin, age, disability, sex, gender identity, religion, reprisal, and where applicable, political beliefs, marital status, familial or parental status, sexual orientation, or all or part of an individual\'s income is derived from any public assistance program, or protected genetic information in employment or in any program or activity conducted or funded by the Department. (Not all prohibited bases apply to all programs and/or employment activities.)',
+			additionalInfo: 'For more information about USDA data usage and policies, please visit: https://www.nal.usda.gov/fnic/fooddata-central'
+		},
+		contact: {
+			message: 'For API support or questions, please refer to the project documentation or contact the development team.'
+		}
+	};
+
+	return res.status(200).json(apiInfo);
+});
+
 // Enhanced health check endpoint
 app.get('/health', async (_req: Request, res: Response) => {
 	try {
